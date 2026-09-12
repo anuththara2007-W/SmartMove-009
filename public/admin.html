@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMove - Fleet Management</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        .fleet-card {
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+        .fleet-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .fleet-info {
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">SmartMove.</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="routes.html">Routes</a>
+                <a href="book.html">Book Ticket</a>
+                <a href="reviews.html">Reviews</a>
+                <a href="admin.html" style="color: var(--primary-accent);">Fleet</a>
+                <a href="reports.html">Reports</a>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <h1>Fleet Management</h1>
+        <p style="margin-bottom: 3rem;">View vehicle documents and multimedia powered by MongoDB.</p>
+
+        <div id="fleetGrid" class="grid" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));">
+            <p>Loading fleet data from MongoDB...</p>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2026 SmartMove Transport Solutions. All rights reserved.</p>
+    </footer>
+    <script src="js/admin.js"></script>
+</body>
+</html>

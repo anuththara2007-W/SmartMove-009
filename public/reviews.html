@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMove - Reviews</title>
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        .review-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+        }
+        .stars {
+            color: #fbbf24;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="standard-header">
+        <a href="index.html" class="logo">SmartMove.</a>
+        <nav class="standard-nav">
+            <a href="routes.html">Routes</a>
+            <a href="reviews.html" style="color: var(--primary-accent);">Reviews</a>
+        </nav>
+        <div class="hero-actions">
+            <a href="system-portal/login.html" class="btn-transparent" style="color: var(--text-main);">Admin Login</a>
+        </div>
+    </header>
+    
+    <main class="page-main">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+            
+            <!-- Left Column: Submit Review -->
+            <div class="gsap-fade-right">
+                <h1 class="section-title">Share Your Experience</h1>
+                <p style="margin-bottom: 2rem; color: var(--text-secondary);">Your feedback helps us improve our services.</p>
+                
+                <div class="glass-panel" style="padding: 3rem;">
+                    <form id="reviewForm" novalidate>
+                        <div class="form-group">
+                            <label>Passenger</label>
+                            <div style="display: flex; gap: 1rem;">
+                                <input type="text" id="passengerDisplay" class="form-control" placeholder="No passenger selected" readonly style="background: #f8fafc; cursor: not-allowed; flex: 1;">
+                                <input type="hidden" id="reviewPassengerId">
+                                <button type="button" class="btn-primary" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-size: 0.9rem;" onclick="SmartMoveUtils.openModal('passengerModal')">Select</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Route</label>
+                            <div style="display: flex; gap: 1rem;">
+                                <input type="text" id="routeDisplay" class="form-control" placeholder="No route selected" readonly style="background: #f8fafc; cursor: not-allowed; flex: 1;">
+                                <input type="hidden" id="reviewRouteId">
+                                <button type="button" class="btn-primary" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-size: 0.9rem;" onclick="SmartMoveUtils.openModal('routeModal')">Select</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reviewRating">Rating (1-5)</label>
+                            <select id="reviewRating" class="form-control check-valid">
+                                <option value="5">5 - Excellent</option>
+                                <option value="4">4 - Very Good</option>
+                                <option value="3" selected>3 - Average</option>
+                                <option value="2">2 - Poor</option>
+                                <option value="1">1 - Terrible</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reviewText">Your Feedback</label>
+                            <textarea id="reviewText" class="form-control check-valid" rows="4" placeholder="Tell us about your trip..."></textarea>
+                            <div class="error-msg" id="error-reviewText">Feedback cannot be empty.</div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn-primary" style="width: 100%; padding: 1rem;" disabled>Submit Review</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Recent Reviews Feed -->
+            <div class="gsap-fade-left">
+                <h2 style="font-size: 1.8rem; margin-bottom: 2rem;">Recent Reviews</h2>
+                <div id="reviewsFeed" class="masonry-grid">
+                    <!-- Skeletons -->
+                    <div class="skeleton-card masonry-item"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-text"></div></div>
+                    <div class="skeleton-card masonry-item"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2026 SmartMove Transport Solutions. All rights reserved.</p>
+    </footer>
+    <!-- Modals -->
+    <div id="passengerModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="font-size: 1.5rem; font-weight: 700;">Select Passenger</h3>
+                <button class="modal-close" onclick="SmartMoveUtils.closeModal('passengerModal')">&times;</button>
+            </div>
+            <div id="passengerModalBody">
+                <div class="skeleton-text"></div><div class="skeleton-text"></div><div class="skeleton-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="routeModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="font-size: 1.5rem; font-weight: 700;">Select Route</h3>
+                <button class="modal-close" onclick="SmartMoveUtils.closeModal('routeModal')">&times;</button>
+            </div>
+            <div id="routeModalBody">
+                <div class="skeleton-text"></div><div class="skeleton-text"></div><div class="skeleton-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/reviews.js"></script>
+</body>
+</html>
