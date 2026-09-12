@@ -1,0 +1,123 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lenis
+    const lenis = new Lenis({ duration: 1.2, smooth: true });
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // Initial Hero GSAP Animations
+    gsap.fromTo('.gsap-fade-down', { y: -50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'power3.out' });
+    gsap.fromTo('.gsap-scale-up', { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, delay: 0.3, ease: 'power3.out' });
+
+    // ScrollTrigger Animations
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray('.gsap-section').forEach(section => {
+        gsap.fromTo(section, 
+            { y: 50, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 1,
+                scrollTrigger: { trigger: section, start: 'top 80%', toggleActions: 'play none none none' }
+            }
+        );
+    });
+
+    fetchAnnouncements();
+    fetchRoutesPreview();
+});
+
+async function fetchAnnouncements() {
+    const grid = document.getElementById('announcementsGrid');
+    
+    try {
+        const response = await fetch('/api/announcements');
+        if (!response.ok) throw new Error('API Error');
+        
+        const announcements = await response.json();
+        
+        if (!announcements || announcements.length === 0) {
+            SmartMoveUtils.renderEmptyState(grid, 'No active announcements', 'Everything is running smoothly on our network.');
+            return;
+        }
+
+        grid.innerHTML = '';
+
+        announcements.forEach((ann) => {
+            const card = document.createElement('div');
+            card.className = 'glass-panel announcement-card';
+            card.style.padding = '2rem';
+            
+            let colorIndicator = '#3b82f6';
+            if (ann.type === 'warning') colorIndicator = '#f59e0b';
+            else if (ann.type === 'alert') colorIndicator = '#ef4444';
+
+            card.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${colorIndicator};"></div>
+                    <h3 style="font-size: 1.1rem; font-weight: 600;">${ann.title}</h3>
+                </div>
+                <p>${ann.message}</p>
+                <small style="color: var(--text-secondary); display: block; margin-top: 1rem;">
+                    ${SmartMoveUtils.formatDate(ann.createdAt)}
+                </small>
+            `;
+            
+            grid.appendChild(card);
+        });
+
+        gsap.fromTo('.announcement-card', 
+            { y: 30, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.8, stagger: 0.15, scrollTrigger: { trigger: '#announcementsGrid', start: 'top 85%' } }
+        );
+
+    } catch (error) {
+        console.error('Announcements Error:', error);
+        SmartMoveUtils.renderErrorState(grid, 'Unable to connect to MongoDB cluster.');
+    }
+}
+
+async function fetchRoutesPreview() {
+    const container = document.getElementById('routesPreviewContainer');
+    
+    try {
+        const response = await fetch('/api/routes');
+        if (!response.ok) throw new Error('API Error');
+        
+        const routes = await response.json();
+        
+        if (!routes || routes.length === 0) {
+            SmartMoveUtils.renderEmptyState(container, 'No routes available', 'We are currently expanding our network.');
+            return;
+        }
+
+        container.innerHTML = '';
+        
+        // Take top 5 for preview
+        routes.slice(0, 5).forEach((route) => {
+            const card = document.createElement('div');
+            card.className = 'route-mini-card route-card-anim';
+            
+            const routeName = route.STARTLOCATION ? `${route.STARTLOCATION} to ${route.ENDLOCATION}` : 'Unknown Route';
+            const routeId = route.ROUTEID || 'N/A';
+
+            card.innerHTML = `
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">${routeName}</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Route ID: ${routeId}</p>
+                <a href="system-portal/book.html?routeId=${routeId}" style="color: var(--primary-accent); font-weight: 600; text-decoration: none;">Book Ticket &rarr;</a>
+            `;
+            
+            container.appendChild(card);
+        });
+
+        gsap.fromTo('.route-card-anim', 
+            { x: 50, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.8, stagger: 0.1, scrollTrigger: { trigger: '#routesPreviewContainer', start: 'top 85%' } }
+        );
+
+    } catch (error) {
+        console.error('Routes Preview Error:', error);
+        SmartMoveUtils.renderErrorState(container, 'Unable to connect to Oracle RDBMS.');
+    }
+}

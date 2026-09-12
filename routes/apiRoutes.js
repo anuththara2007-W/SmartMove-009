@@ -5,16 +5,48 @@ const mongoController = require('../controllers/mongoController');
 
 // --- Oracle Endpoints ---
 router.get('/routes', oracleController.getRoutes);
+router.post('/routes', oracleController.createRoute);
+router.put('/routes/:id', oracleController.updateRoute);
+router.delete('/routes/:id', oracleController.deleteRoute);
+
 router.post('/tickets', oracleController.bookTicket);
+router.get('/tickets', oracleController.getTickets); // Admin panel read
+
 router.get('/reports/revenue', oracleController.getRevenue);
 router.get('/reports/routes', oracleController.getFrequentRoutes);
 
+router.get('/payments', oracleController.getPayments);
+router.post('/payments', oracleController.createPayment);
+router.put('/payments/:id', oracleController.updatePayment);
+router.delete('/payments/:id', oracleController.deletePayment);
+
+router.get('/drivers', oracleController.getDrivers);
+router.post('/drivers', oracleController.createDriver);
+router.put('/drivers/:id', oracleController.updateDriver);
+router.delete('/drivers/:id', oracleController.deleteDriver);
+
+router.get('/passengers', oracleController.getPassengers);
+router.post('/passengers', oracleController.createPassenger);
+router.put('/passengers/:id', oracleController.updatePassenger);
+router.delete('/passengers/:id', oracleController.deletePassenger);
+
+router.get('/vehicles', oracleController.getVehicles);
+
+router.get('/trips', oracleController.getTrips);
+router.post('/trips', oracleController.createTrip);
+router.put('/trips/:id', oracleController.updateTrip);
+router.delete('/trips/:id', oracleController.deleteTrip);
+
 // --- MongoDB Endpoints ---
+router.get('/reviews', mongoController.getAllReviews);
 router.post('/reviews', mongoController.submitReview);
 router.get('/reviews/route/:id', mongoController.getReviewsByRoute);
 router.get('/vehicles/top-rated', mongoController.getTopRatedVehicles);
 router.get('/reviews/search', mongoController.searchReviews);
 router.get('/announcements', mongoController.getAnnouncements);
+router.post('/announcements', mongoController.postAnnouncement);
 router.get('/vehicles/documents', mongoController.getVehicleDocuments);
-
+router.get('/images', mongoController.getImages);
+router.post('/images', mongoController.addImage);
+router.delete('/images/:id', mongoController.deleteImage);
 module.exports = router;
