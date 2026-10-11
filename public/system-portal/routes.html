@@ -215,10 +215,14 @@
                             <input type="number" step="0.1" id="estimatedDuration" class="form-input" placeholder="3" required>
                         </div>
                     </div>
-                    <div style="margin-bottom: 1.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.95rem; font-weight: 600;">
-                            <input type="checkbox" id="isPopular" checked style="width: 18px; height: 18px; accent-color: var(--primary-accent); cursor: pointer;">
-                            <span>Feature in Popular Routes (Homepage)</span>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.9rem 1.15rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Feature in Popular Routes</div>
+                            <div style="font-size: 0.78rem; color: #64748b;">Display this route on the homepage preview</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="isPopular" checked>
+                            <span class="slider"></span>
                         </label>
                     </div>
                     <button type="submit" class="btn-primary" id="submitBtn" style="width: 100%; border-radius: 12px; padding: 0.9rem;">Save Route</button>

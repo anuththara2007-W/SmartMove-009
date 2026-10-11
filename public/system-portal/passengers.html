@@ -4,9 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartMove - Manage Passengers</title>
-    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="../global.css?v=2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
+        .form-label {
+            display: block;
+            margin-bottom: 0.45rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #334155;
+            letter-spacing: -0.01em;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1.15rem;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 12px;
+            background-color: #f8fafc;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-main);
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: none;
+            background-color: #ffffff;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+        }
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
         .crud-table {
             width: 100%;
             border-collapse: collapse;
