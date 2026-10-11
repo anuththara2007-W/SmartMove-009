@@ -31,7 +31,7 @@ async function prefillRouteFromQuery() {
     }
 }
 
-window.validateForm = function() {
+window.validateForm = function () {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -41,7 +41,7 @@ window.validateForm = function() {
     const payment = document.getElementById('paymentMethod').value.trim();
     const selectedVehicle = document.getElementById('selectedVehicleId').value;
     const btn = document.getElementById('submitBtn');
-    
+
     if (firstName && lastName && email && phone && startLoc && endLoc && payment && selectedVehicle) {
         btn.disabled = false;
     } else {
@@ -57,7 +57,7 @@ async function loadVehiclesForSelection() {
             fetch('/api/vehicles/documents')
         ]);
         if (!vehiclesRes.ok) throw new Error('Failed to fetch vehicles');
-        
+
         const vehicles = await vehiclesRes.json();
         let images = [];
         if (imagesRes.ok) images = await imagesRes.json();
@@ -86,7 +86,7 @@ async function loadVehiclesForSelection() {
             card.style.cursor = 'pointer';
             card.style.border = '2px solid transparent';
             card.style.transition = 'all 0.2s';
-            
+
             card.innerHTML = `
                 ${imgHtml}
                 <div style="padding: 1rem;">
@@ -116,7 +116,7 @@ async function loadVehiclesForSelection() {
 async function handleBookingSubmit(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
-    
+
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -125,16 +125,16 @@ async function handleBookingSubmit(e) {
     const endLocation = document.getElementById('endLocation').value.trim();
     const paymentMethod = document.getElementById('paymentMethod').value.trim();
     const vehicleID = document.getElementById('selectedVehicleId').value;
-    
+
     if (!vehicleID) {
         document.getElementById('vehicleErrorMsg').style.display = 'block';
         return;
     }
-    
+
     try {
         btn.disabled = true;
         btn.textContent = 'Processing...';
-        
+
         // 1. Create Passenger
         const passRes = await fetch('/api/passengers', {
             method: 'POST',
@@ -145,15 +145,44 @@ async function handleBookingSubmit(e) {
         const passData = await passRes.json();
         const passengerID = passData.passengerId;
 
-        // 2. Create Route
-        const routeRes = await fetch('/api/routes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ startLocation, endLocation, distanceKm: 10, estimatedDuration: 30 })
-        });
-        if (!routeRes.ok) throw new Error('Failed to create route');
-        const routeData = await routeRes.json();
-        const routeID = routeData.routeId;
+        // 2. Determine Route (reuse existing official route or create custom journey route)
+        const urlParams = new URLSearchParams(window.location.search);
+        let routeID = urlParams.get('routeId');
+
+        if (!routeID) {
+            try {
+                const existingRes = await fetch('/api/routes');
+                if (existingRes.ok) {
+                    const existingList = await existingRes.json();
+                    const matched = existingList.find(r =>
+                        (r.STARTLOCATION || '').trim().toLowerCase() === startLocation.toLowerCase() &&
+                        (r.ENDLOCATION || '').trim().toLowerCase() === endLocation.toLowerCase()
+                    );
+                    if (matched) {
+                        routeID = matched.ROUTEID || matched.routeId;
+                    }
+                }
+            } catch (err) {
+                console.error('Route matching check failed:', err);
+            }
+        }
+
+        if (!routeID) {
+            const routeRes = await fetch('/api/routes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startLocation,
+                    endLocation,
+                    distanceKm: 10,
+                    estimatedDuration: 30,
+                    isPopular: 'N' // Custom journey - not featured on homepage Popular Routes
+                })
+            });
+            if (!routeRes.ok) throw new Error('Failed to create route');
+            const routeData = await routeRes.json();
+            routeID = routeData.routeId;
+        }
 
         // 3. Book Ticket
         const ticketRes = await fetch('/api/tickets', {
@@ -161,21 +190,21 @@ async function handleBookingSubmit(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ passengerID, routeID, vehicleID, paymentMethod })
         });
-        
+
         if (!ticketRes.ok) throw new Error('Booking failed');
-        
+
         SmartMoveUtils.showToast('Your booking was successful!', 'success');
-        
+
         // Add to Table
         const tbody = document.getElementById('userBookingsTableBody');
         // Clear empty message if it exists
         if (tbody.children.length === 1 && tbody.children[0].textContent.includes('No bookings')) {
             tbody.innerHTML = '';
         }
-        
+
         // Generate a random ticket ID placeholder if backend doesn't return one immediately
         const mockTicketId = Math.floor(Math.random() * 90000) + 10000;
-        
+
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid var(--border-color)';
         tr.innerHTML = `
@@ -186,13 +215,13 @@ async function handleBookingSubmit(e) {
         `;
         // Insert at top
         tbody.insertBefore(tr, tbody.firstChild);
-        
+
         // Reset form
         document.getElementById('bookingForm').reset();
         document.getElementById('selectedVehicleId').value = '';
         document.querySelectorAll('.vehicle-card').forEach(c => c.style.border = '2px solid transparent');
         validateForm();
-        
+
     } catch (error) {
         console.error(error);
         SmartMoveUtils.showToast(error.message || 'Failed to connect to Oracle DB. Is it running?', 'error');

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartMove - Financials & Tickets</title>
-    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="../global.css?v=2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         .summary-grid {
@@ -70,7 +70,7 @@
 </head>
 <body>
     <header class="standard-header">
-        <div class="logo">SmartMove <span style="font-size: 0.8rem; background: var(--primary-accent); color: white; padding: 2px 8px; border-radius: 8px; vertical-align: middle; margin-left: 0.5rem; font-weight: 700;">System Portal</span></div>
+        <a href="index.html" class="logo" style="text-decoration: none; color: inherit;">SmartMove <span style="font-size: 0.8rem; background: var(--primary-accent); color: white; padding: 2px 8px; border-radius: 8px; vertical-align: middle; margin-left: 0.5rem; font-weight: 700;">System Portal</span></a>
                 <nav class="standard-nav">
             <a href="index.html" class="nav-icon" title="Dashboard">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -120,7 +120,10 @@
                 <p style="color: var(--text-secondary);">Overview of all generated tickets and associated revenue.</p>
             </div>
             <div>
-                <button class="btn-transparent" onclick="fetchData()" style="margin-right: 1rem;">Refresh</button>
+                <button class="btn-refresh" onclick="fetchData()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Refresh
+                </button>
             </div>
         </div>
 

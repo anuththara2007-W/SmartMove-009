@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = document.getElementById('annTitle').value.trim();
         const type = document.getElementById('annType').value;
         const message = document.getElementById('annMessage').value.trim();
-        
+
         if (title && type && message) {
             submitBtn.disabled = false;
         } else {
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear errors
     const inputs = form.querySelectorAll('.check-valid');
     inputs.forEach(input => {
-        input.addEventListener('input', function() {
+        input.addEventListener('input', function () {
             this.classList.remove('invalid');
             const errorElement = document.getElementById(`error-${this.id}`);
             if (errorElement) {
@@ -47,17 +47,17 @@ function showError(inputId) {
 
 async function handleAnnouncementSubmit(event) {
     event.preventDefault();
-    
+
     const title = document.getElementById('annTitle').value.trim();
     const type = document.getElementById('annType').value;
     const message = document.getElementById('annMessage').value.trim();
-    
+
     let isValid = true;
-    
+
     if (!title) { showError('annTitle'); isValid = false; }
     if (!type) { showError('annType'); isValid = false; }
     if (!message) { showError('annMessage'); isValid = false; }
-    
+
     if (!isValid) return;
 
     const submitButton = document.getElementById('submitBtn');
@@ -65,13 +65,13 @@ async function handleAnnouncementSubmit(event) {
     try {
         submitButton.disabled = true;
         submitButton.textContent = 'Posting...';
-        
+
         const response = await fetch('/api/announcements', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, type, message })
         });
-        
+
         if (!response.ok) {
             throw new Error('Failed to post announcement');
         }
@@ -79,7 +79,7 @@ async function handleAnnouncementSubmit(event) {
         SmartMoveUtils.showToast('Success! The announcement has been posted to MongoDB.', 'success');
         document.getElementById('announcementForm').reset();
         submitButton.disabled = true;
-        
+
     } catch (error) {
         console.error('Error:', error);
         SmartMoveUtils.showToast('Failed to post announcement.', 'error');

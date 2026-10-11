@@ -26,16 +26,20 @@ let allDrivers = [];
 let currentSelectorType = null;
 let currentTripIdToDelete = null;
 
+let allTickets = [];
+
 async function fetchForeignData() {
     try {
-        const [routesRes, vehiclesRes, driversRes] = await Promise.all([
+        const [routesRes, vehiclesRes, driversRes, ticketsRes] = await Promise.all([
             fetch('/api/routes').then(r => r.json()),
             fetch('/api/vehicles').then(r => r.json()),
-            fetch('/api/drivers').then(r => r.json())
+            fetch('/api/drivers').then(r => r.json()),
+            fetch('/api/tickets').then(r => r.json())
         ]);
         allRoutes = routesRes || [];
         allVehicles = vehiclesRes || [];
         allDrivers = driversRes || [];
+        allTickets = ticketsRes || [];
     } catch (err) {
         console.error("Failed to load lookup data", err);
     }
@@ -105,6 +109,10 @@ window.openTripForm = function() {
     document.getElementById('tripForm').reset();
     document.getElementById('tripId').value = '';
     
+    // Hide passengers section
+    const pc = document.getElementById('bookedPassengersContainer');
+    if(pc) pc.style.display = 'none';
+    
     // Reset selectors
     document.getElementById('routeId').value = '';
     document.getElementById('display-route').textContent = 'Select a Route...';
@@ -143,6 +151,31 @@ window.editTrip = function(id) {
     document.getElementById('baseFare').value = trip.BASEFARE !== undefined ? trip.BASEFARE : '15.00';
     document.getElementById('tripStatus').value = trip.TRIPSTATUS;
     
+    // Show Booked Passengers
+    const passengersContainer = document.getElementById('bookedPassengersContainer');
+    const passengersList = document.getElementById('bookedPassengersList');
+    
+    const tripTickets = allTickets.filter(tk => {
+        const tTripId = tk.TRIPID || tk.tripId || tk.TripID;
+        return tTripId == id;
+    });
+
+    if (tripTickets.length > 0) {
+        passengersContainer.style.display = 'block';
+        passengersList.innerHTML = tripTickets.map(tk => {
+            const fname = tk.FIRSTNAME || tk.firstName || tk.FirstName || '';
+            const lname = tk.LASTNAME || tk.lastName || tk.LastName || '';
+            const status = tk.TICKETSTATUS || tk.ticketStatus || tk.TicketStatus || '';
+            const seat = tk.SEATNUMBER || tk.seatNumber || tk.SeatNumber || 'N/A';
+            return `<div style="padding: 4px 0; border-bottom: 1px solid #eee;">
+                <strong>${fname} ${lname}</strong> (Seat: ${seat}) - <span style="color:var(--primary-accent);">${status}</span>
+            </div>`;
+        }).join('');
+    } else {
+        passengersContainer.style.display = 'block';
+        passengersList.innerHTML = '<div style="color: var(--text-secondary);">No passengers booked yet.</div>';
+    }
+
     SmartMoveUtils.openModal('tripModal');
 }
 
@@ -258,11 +291,18 @@ function renderSelectorList(filter = '') {
         items = allVehicles.filter(v => v.STATUS === 'Active').filter(v => 
             (v.REGNUMBER || '').toLowerCase().includes(filter) || 
             (v.VEHICLETYPE || '').toLowerCase().includes(filter)
-        ).map(v => ({
-            id: v.VEHICLEID,
-            display: `${v.REGNUMBER} (${v.VEHICLETYPE})`,
-            sub: `Capacity: ${v.CAPACITY} | Status: ${v.STATUS}`
-        }));
+        ).map(v => {
+            const activeCount = v.ACTIVETRIPSCOUNT !== undefined ? v.ACTIVETRIPSCOUNT : (v.activeTripsCount || 0);
+            const isAvail = activeCount === 0;
+            const statusLabel = isAvail ? '🟢 Available' : (v.CURRENTTRIPSTATUS === 'In Progress' ? `🟠 On Trip (#${v.CURRENTTRIPID})` : `🔵 Scheduled (#${v.CURRENTTRIPID})`);
+            const completedNote = (v.COMPLETEDTRIPSCOUNT > 0) ? ` &bull; ${v.COMPLETEDTRIPSCOUNT} completed trip(s)` : '';
+            return {
+                id: v.VEHICLEID,
+                display: `${v.REGNUMBER} (${v.VEHICLETYPE})`,
+                badge: statusLabel,
+                sub: `Capacity: ${v.CAPACITY} | ${isAvail ? 'Ready to book' : 'Assigned to active trip'}${completedNote}`
+            };
+        });
     } else if (currentSelectorType === 'driver') {
         items = allDrivers.filter(d => d.STATUS === 'Active').filter(d => 
             (d.FIRSTNAME || '').toLowerCase().includes(filter) || 
@@ -280,9 +320,12 @@ function renderSelectorList(filter = '') {
     }
 
     list.innerHTML = items.map(item => `
-        <div class="selector-item" onclick="selectItem('${item.id}', '${item.display.replace(/'/g, "\\'")}')">
-            <div style="font-weight: 600;">${SmartMoveUtils.escapeHtml(item.display)}</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">${SmartMoveUtils.escapeHtml(item.sub)}</div>
+        <div class="selector-item" onclick="selectItem('${item.id}', '${item.display.replace(/'/g, "\\'")}')" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem;">
+            <div>
+                <div style="font-weight: 600; color: #0f172a;">${SmartMoveUtils.escapeHtml(item.display)}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">${item.sub}</div>
+            </div>
+            ${item.badge ? `<div style="font-size: 0.8rem; font-weight: 700; white-space: nowrap; margin-left: 0.75rem;">${item.badge}</div>` : ''}
         </div>
     `).join('');
 }

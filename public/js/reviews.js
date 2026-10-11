@@ -80,10 +80,14 @@ async function handleReviewSubmit(event) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                passengerID: parseInt(passengerId, 10),
                 passengerId: parseInt(passengerId, 10),
+                routeID: parseInt(routeId, 10),
                 routeId: parseInt(routeId, 10),
+                driverID: parseInt(driverId || 999, 10),
                 driverId: parseInt(driverId || 999, 10),
                 rating: parseInt(rating, 10),
+                feedback: feedback,
                 feedbackText: feedback
             })
         });
@@ -125,15 +129,19 @@ async function fetchRecentReviews() {
             const card = document.createElement('div');
             card.className = 'masonry-item review-card';
             
-            const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            const ratingVal = review.rating || 5;
+            const stars = '★'.repeat(ratingVal) + '☆'.repeat(Math.max(0, 5 - ratingVal));
+            const feedbackText = review.feedbackText || review.feedback || '';
+            const pId = review.passengerId || review.passengerID || 'N/A';
+            const rId = review.routeId || review.routeID || 'N/A';
             
             card.innerHTML = `
                 <div class="stars">${stars}</div>
                 <p style="font-weight: 500; margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.95rem;">
-                    " ${review.feedbackText} "
+                    " ${feedbackText} "
                 </p>
                 <small style="color: var(--text-secondary); font-size: 0.8rem;">
-                    Passenger #${review.passengerId} • Route #${review.routeId} <br>
+                    Passenger #${pId} • Route #${rId} <br>
                     ${SmartMoveUtils.formatDate(review.createdAt)}
                 </small>
             `;

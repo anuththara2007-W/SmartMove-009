@@ -61,7 +61,7 @@ async function fetchRoutesPreview() {
     const container = document.getElementById('routesPreviewContainer');
     
     try {
-        const response = await fetch('/api/routes');
+        const response = await fetch('/api/routes?popular=true');
         if (!response.ok) throw new Error('API Error');
         
         const routes = await response.json();
@@ -82,7 +82,14 @@ async function fetchRoutesPreview() {
 
         container.innerHTML = '';
         
-        const fallbackImage = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600&q=80';
+        const fallbackImage = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80';
+
+        // Check if admin panel configured a default route image (resourceId === 0 or caption contains 'default')
+        const adminDefaultRouteImg = routeImages.find(img => 
+            (img.resourceType === 'route' || !img.resourceType) && 
+            (Number(img.resourceId) === 0 || (img.caption && img.caption.toLowerCase().includes('default')))
+        );
+        const defaultRouteUrl = adminDefaultRouteImg?.imageUrl || fallbackImage;
 
         // Take top 5 featured routes
         routes.slice(0, 5).forEach((route) => {
@@ -94,14 +101,18 @@ async function fetchRoutesPreview() {
             const routeName = route.STARTLOCATION ? `${route.STARTLOCATION} to ${route.ENDLOCATION}` : 'Unknown Route';
             const routeId = route.ROUTEID || route.routeId || 'N/A';
             
-            // Simpler logic for finding the image URL to handle fallbacks and data URIs
-            let imgUrl = fallbackImage;
-            const matchedImg = routeImages.find(img => img.referenceId === String(routeId) || img.referenceId === Number(routeId));
+            // Match specific route image from admin panel (resourceId === routeId) or fallback to admin/system default
+            let imgUrl = defaultRouteUrl;
+            const matchedImg = routeImages.find(img => 
+                (img.resourceType === 'route' || !img.resourceType) &&
+                (Number(img.resourceId) === Number(routeId) || String(img.resourceId) === String(routeId) ||
+                 Number(img.referenceId) === Number(routeId) || String(img.referenceId) === String(routeId))
+            );
             if (matchedImg && matchedImg.imageUrl) {
                 imgUrl = matchedImg.imageUrl;
-                if (imgUrl.startsWith('data:image')) {
-                    imgUrl = imgUrl.replace(/[\r\n\s]+/g, '');
-                }
+            }
+            if (imgUrl && imgUrl.startsWith('data:image')) {
+                imgUrl = imgUrl.replace(/[\r\n\s]+/g, '');
             }
 
             card.innerHTML = `

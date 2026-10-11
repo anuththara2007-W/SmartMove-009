@@ -7,9 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const calcBtn = document.getElementById('calcRevenueBtn');
     calcBtn.addEventListener('click', handleCalculateRevenue);
-    
-    const searchBtn = document.getElementById('searchBtn');
-    if (searchBtn) searchBtn.addEventListener('click', handleSearchComplaints);
+
 });
 
 async function handleCalculateRevenue() {
@@ -96,36 +94,26 @@ async function fetchRecentBookings() {
         // Show top 10 most recent
         tickets.slice(0, 10).forEach(t => {
             const tr = document.createElement('tr');
-            tr.className = 'table-row-anim';
             
-            // Extract from array or object structure based on Oracle fetch mode
-            const id = Array.isArray(t) ? t[0] : (t.TICKETID || t.ticketId);
-            const passengerName = Array.isArray(t) ? `${t[6]} ${t[7]}` : `${t.FIRSTNAME || ''} ${t.LASTNAME || ''}`;
-            const contact = Array.isArray(t) ? t[8] : (t.CONTACTNUMBER || t.contactNumber || 'N/A');
-            const route = Array.isArray(t) ? `${t[9]} &rarr; ${t[10]}` : `${t.STARTLOCATION || ''} &rarr; ${t.ENDLOCATION || ''}`;
-            const fare = Array.isArray(t) ? t[4] : (t.FAREAMOUNT || t.fareAmount || 0);
-            const status = Array.isArray(t) ? t[5] : (t.TICKETSTATUS || t.ticketStatus || 'Booked');
-
-            const statusColors = {
-                'Booked': '#3b82f6',
-                'Confirmed': '#10b981',
-                'Cancelled': '#ef4444'
-            };
-            const color = statusColors[status] || '#64748b';
+            // Standard object property access
+            const id = t.TICKETID || t.ticketId || t.TicketID;
+            const passengerName = `${t.FIRSTNAME || t.firstName || ''} ${t.LASTNAME || t.lastName || ''}`;
+            const route = `${t.STARTLOCATION || t.startLocation || ''} -> ${t.ENDLOCATION || t.endLocation || ''}`;
+            const fare = t.FAREAMOUNT || t.fareAmount || t.FareAmount || 0;
+            const status = t.TICKETSTATUS || t.ticketStatus || t.TicketStatus || 'Booked';
 
             tr.innerHTML = `
                 <td><strong>#${id}</strong></td>
                 <td>${passengerName}</td>
-                <td>${contact}</td>
                 <td>${route}</td>
                 <td>${SmartMoveUtils.formatCurrency(fare)}</td>
-                <td><span style="background: ${color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">${status}</span></td>
+                <td><span>${status}</span></td>
                 <td>
-                    <select onchange="updateTicketStatus(${id}, this.value)" class="form-control" style="padding: 4px; font-size: 0.85rem; border-radius: 4px;">
+                    <select onchange="updateTicketStatus(${id}, this.value)">
                         <option value="">Update...</option>
                         <option value="Confirmed">Confirm</option>
                         <option value="Cancelled">Cancel</option>
-                        <option value="Booked">Mark as Booked</option>
+                        <option value="Booked">Booked</option>
                     </select>
                 </td>
             `;
@@ -159,14 +147,12 @@ async function updateTicketStatus(ticketId, newStatus) {
 function renderFrequentRoutesTable(tbody, routes) {
     tbody.innerHTML = '';
     
-    routes.forEach((route, i) => {
+    routes.forEach((route) => {
         const tr = document.createElement('tr');
-        tr.className = 'table-row-anim';
         
-        // Handle array structure from Oracle cursors or object structure
-        const id = Array.isArray(route) ? route[0] : (route.ROUTEID || route.routeId || 'N/A');
-        const name = Array.isArray(route) ? route[1] : (route.ROUTENAME || route.routeName || 'Unknown');
-        const count = Array.isArray(route) ? route[2] : (route.TRIPCOUNT || route.tripCount || 0);
+        const id = Array.isArray(route) ? route[0] : (route.ROUTEID || route.routeId || route.RouteID || 'N/A');
+        const name = Array.isArray(route) ? route[1] : (route.ROUTENAME || route.routeName || route.RouteName || 'Route');
+        const count = Array.isArray(route) ? (route[2] ?? 0) : (route.TRIPCOUNT ?? route.tripCount ?? route.TripCount ?? 0);
 
         tr.innerHTML = `
             <td><strong>#${id}</strong></td>
@@ -207,34 +193,4 @@ async function fetchTopDrivers() {
     }
 }
 
-async function handleSearchComplaints() {
-    const query = document.getElementById('searchInput').value;
-    const tbody = document.getElementById('complaintsTableBody');
-    if (!query) return;
-    
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Searching...</td></tr>';
-    
-    try {
-        const res = await fetch(`/api/reviews/search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error();
-        const results = await res.json();
-        
-        if (results.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">No reviews matched "${query}".</td></tr>`;
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        results.forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>Route #${r.routeId || 'N/A'}</td>
-                <td>${r.feedbackText || 'N/A'}</td>
-                <td style="color: #fbbf24;">${r.rating} ★</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: red;">MongoDB search failed.</td></tr>';
-    }
-}
+

@@ -30,7 +30,12 @@ router.get('/passengers', oracleController.getPassengers);
 router.post('/passengers', oracleController.createPassenger);
 router.put('/passengers/:id', oracleController.updatePassenger);
 router.delete('/passengers/:id', oracleController.deletePassenger);
+router.get('/passengers/:passengerId/history', oracleController.getPassengerHistory);
 
+router.get('/vehicles/available', (req, res) => {
+    req.query.available = 'true';
+    return oracleController.getVehicles(req, res);
+});
 router.get('/vehicles', oracleController.getVehicles);
 router.post('/vehicles', oracleController.createVehicle);
 router.put('/vehicles/:id', oracleController.updateVehicle);
