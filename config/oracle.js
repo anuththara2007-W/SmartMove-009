@@ -1,10 +1,12 @@
+//Import the oracleDB Node.js driver.
 const oracledb = require('oracledb');
+//Import envirinmnt varibles form .env file
 require('dotenv').config();
 
 const oracleDbConfig = {
     user: process.env.ORACLE_USER || 'system',
     password: process.env.ORACLE_PASSWORD,
-    connectString: process.env.ORACLE_CONN_STRING || 'localhost:1521/XE'
+    connectString: process.env.ORACLE_CONN_STRING || 'localhost:1521/XE' //default listner port.
 };
 
 // Initialize Oracle Connection Pool
