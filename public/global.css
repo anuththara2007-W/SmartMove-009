@@ -250,7 +250,9 @@ button.btn-transparent:hover,
   width: 100vw;
   height: 100vh;
   background: url('https://images.unsplash.com/photo-1503376712351-1f2be886b610?w=2000&q=100') no-repeat center center;
-  background-size: cover;
+  background-size: 100% 100% !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
   color: white;
   display: flex;
   flex-direction: column;
