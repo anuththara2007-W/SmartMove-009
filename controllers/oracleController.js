@@ -43,19 +43,34 @@ const deleteRecord = (tableName, idCol, errorMsg) => async (req, res) => {
 };
 
 // --- Routes ---
-const getRoutes = fetchAll(`SELECT * FROM Routes`, 'Failed to fetch routes');
+const getRoutes = async (req, res) => {
+    await withConnection(req, res, async (connection) => {
+        const isPopularOnly = req.query.popular === 'true';
+        let query = `SELECT * FROM Routes`;
+        if (isPopularOnly) {
+            query += ` WHERE NVL(IsPopular, 'N') = 'Y'`;
+        }
+        query += ` ORDER BY RouteID ASC`;
+        const result = await executeQuery(connection, query);
+        res.json(result.rows);
+    }, 'Failed to fetch routes');
+};
 const deleteRoute = deleteRecord('Routes', 'RouteID', 'Failed to delete route');
 
 const createRoute = async (req, res) => {
     await withConnection(req, res, async (conn) => {
-        const { startLocation, endLocation, distanceKm, estimatedDuration } = req.body;
+        const { startLocation, endLocation, distanceKm, estimatedDuration, isPopular } = req.body;
+        const popularFlag = (isPopular === 'N' || isPopular === false) ? 'N' : 'Y';
         const result = await executeQuery(conn, 
-            `INSERT INTO Routes (StartLocation, EndLocation, DistanceKm, EstimatedDuration) VALUES (:startLocation, :endLocation, :distanceKm, :estimatedDuration) RETURNING RouteID INTO :outId`,
+            `INSERT INTO Routes (StartLocation, EndLocation, DistanceKm, EstimatedDuration, IsPopular) 
+             VALUES (:startLocation, :endLocation, :distanceKm, :estimatedDuration, :popularFlag) 
+             RETURNING RouteID INTO :outId`,
             { 
                 startLocation, 
                 endLocation, 
                 distanceKm: distanceKm || 10, 
                 estimatedDuration: estimatedDuration || 30,
+                popularFlag,
                 outId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
             }, true
         );
@@ -65,11 +80,15 @@ const createRoute = async (req, res) => {
 
 const updateRoute = async (req, res) => {
     await withConnection(req, res, async (conn) => {
-        const { startLocation, endLocation, distanceKm, estimatedDuration } = req.body;
-        await executeQuery(conn, 
-            `UPDATE Routes SET StartLocation = :startLocation, EndLocation = :endLocation, DistanceKm = :distanceKm, EstimatedDuration = :estimatedDuration WHERE RouteID = :id`,
-            { startLocation, endLocation, distanceKm, estimatedDuration, id: req.params.id }, true
-        );
+        const { startLocation, endLocation, distanceKm, estimatedDuration, isPopular } = req.body;
+        let updateQuery = `UPDATE Routes SET StartLocation = :startLocation, EndLocation = :endLocation, DistanceKm = :distanceKm, EstimatedDuration = :estimatedDuration`;
+        const params = { startLocation, endLocation, distanceKm: distanceKm || 10, estimatedDuration: estimatedDuration || 30, id: req.params.id };
+        if (isPopular !== undefined) {
+            updateQuery += `, IsPopular = :isPopular`;
+            params.isPopular = isPopular;
+        }
+        updateQuery += ` WHERE RouteID = :id`;
+        await executeQuery(conn, updateQuery, params, true);
         res.json({ message: 'Route updated successfully' });
     }, 'Failed to update route');
 };

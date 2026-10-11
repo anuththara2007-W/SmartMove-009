@@ -61,7 +61,7 @@ async function fetchRoutesPreview() {
     const container = document.getElementById('routesPreviewContainer');
     
     try {
-        const response = await fetch('/api/routes');
+        const response = await fetch('/api/routes?popular=true');
         if (!response.ok) throw new Error('API Error');
         
         const routes = await response.json();

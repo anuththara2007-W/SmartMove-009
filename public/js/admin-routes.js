@@ -32,11 +32,15 @@ async function fetchRoutes() {
 function renderRoutes(routes) {
     const tbody = document.getElementById('routesBody');
     if (!routes || routes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary); padding: 2rem;">No routes found.<br><br><button class="btn-primary" onclick="openFormModal()">Add Route</button></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-secondary); padding: 2rem;">No routes found.<br><br><button class="btn-primary" onclick="openFormModal()">Add Route</button></td></tr>`;
         return;
     }
 
     tbody.innerHTML = routes.map(r => {
+        const isPop = r.ISPOPULAR === 'Y';
+        const typeBadge = isPop 
+            ? `<span style="background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">★ Popular</span>`
+            : `<span style="background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">Custom Journey</span>`;
         return `
         <tr>
             <td>${r.ROUTEID}</td>
@@ -44,8 +48,9 @@ function renderRoutes(routes) {
             <td>${SmartMoveUtils.escapeHtml(r.ENDLOCATION)}</td>
             <td>${r.DISTANCEKM}</td>
             <td>${r.ESTIMATEDDURATION}</td>
+            <td>${typeBadge}</td>
             <td>
-                <button class="action-btn btn-edit" onclick="editRoute('${r.ROUTEID}', '${SmartMoveUtils.escapeHtml(r.STARTLOCATION)}', '${SmartMoveUtils.escapeHtml(r.ENDLOCATION)}', '${r.DISTANCEKM}', '${r.ESTIMATEDDURATION}')">Edit</button>
+                <button class="action-btn btn-edit" onclick="editRoute('${r.ROUTEID}', '${SmartMoveUtils.escapeHtml(r.STARTLOCATION)}', '${SmartMoveUtils.escapeHtml(r.ENDLOCATION)}', '${r.DISTANCEKM}', '${r.ESTIMATEDDURATION}', '${r.ISPOPULAR || 'N'}')">Edit</button>
                 <button class="action-btn btn-delete" onclick="promptDelete('${r.ROUTEID}', '${SmartMoveUtils.escapeHtml(r.STARTLOCATION)} to ${SmartMoveUtils.escapeHtml(r.ENDLOCATION)}')">Delete</button>
             </td>
         </tr>
@@ -57,10 +62,12 @@ window.openFormModal = function() {
     document.getElementById('submitBtn').textContent = 'Save Route';
     document.getElementById('routeForm').reset();
     document.getElementById('routeId').value = '';
+    const popCheckbox = document.getElementById('isPopular');
+    if (popCheckbox) popCheckbox.checked = true; // Default admin routes to popular
     SmartMoveUtils.openModal('routeModal');
 }
 
-window.editRoute = function(id, startLoc, endLoc, dist, duration) {
+window.editRoute = function(id, startLoc, endLoc, dist, duration, isPopular) {
     document.getElementById('formTitle').textContent = 'Edit Route';
     document.getElementById('submitBtn').textContent = 'Update Route';
     
@@ -69,6 +76,8 @@ window.editRoute = function(id, startLoc, endLoc, dist, duration) {
     document.getElementById('endLocation').value = endLoc;
     document.getElementById('distanceKm').value = dist;
     document.getElementById('estimatedDuration').value = duration;
+    const popCheckbox = document.getElementById('isPopular');
+    if (popCheckbox) popCheckbox.checked = (isPopular === 'Y');
     
     SmartMoveUtils.openModal('routeModal');
 }
@@ -78,11 +87,13 @@ async function handleRouteSubmit(e) {
     const btn = document.getElementById('submitBtn');
     
     const id = document.getElementById('routeId').value;
+    const popCheckbox = document.getElementById('isPopular');
     const payload = {
         startLocation: document.getElementById('startLocation').value.trim(),
         endLocation: document.getElementById('endLocation').value.trim(),
         distanceKm: parseFloat(document.getElementById('distanceKm').value),
-        estimatedDuration: parseFloat(document.getElementById('estimatedDuration').value)
+        estimatedDuration: parseFloat(document.getElementById('estimatedDuration').value),
+        isPopular: popCheckbox ? (popCheckbox.checked ? 'Y' : 'N') : 'Y'
     };
 
     if (!SmartMoveUtils.validateRequired(payload.startLocation) || !SmartMoveUtils.validateRequired(payload.endLocation)) {
