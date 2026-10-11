@@ -150,9 +150,12 @@ const updateTicketStatus = async (req, res) => {
         // PL/SQL Block executing business logic to update status
         await conn.execute(`
             BEGIN
+                -- Update the status of the specific ticket in the Tickets table
                 UPDATE Tickets 
                 SET TicketStatus = :newStatus 
                 WHERE TicketID = :ticketID;
+                
+                -- Save the changes permanently to the database
                 COMMIT;
             END;
         `, { newStatus, ticketID }, { autoCommit: false });
@@ -167,28 +170,40 @@ const getRevenue = async (req, res) => {
         const { startDate, endDate } = req.query;
         const result = await conn.execute(`
             DECLARE
-                CURSOR c_payments IS 
-                    SELECT Amount FROM Payments 
-                    WHERE PaymentStatus = 'Completed' 
-                      AND TRUNC(PaymentDate) BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD');
-                v_amt NUMBER;
-                v_total NUMBER := 0;
-            BEGIN
-                OPEN c_payments;
-                LOOP
-                    FETCH c_payments INTO v_amt;
-                    EXIT WHEN c_payments%NOTFOUND;
-                    v_total := v_total + NVL(v_amt, 0);
-                END LOOP;
-                CLOSE c_payments;
+                -- Declare a cursor to fetch ticket prices one by one
+                CURSOR ticket_prices_cursor IS 
+                    SELECT FareAmount FROM Tickets 
+                    WHERE TicketStatus IN ('Booked', 'Completed');
                 
-                :ret := v_total;
+                -- Human readable variables
+                current_ticket_price NUMBER;
+                total_calculated_revenue NUMBER := 0;
+            BEGIN
+                -- Open the cursor to start reading
+                OPEN ticket_prices_cursor;
+                
+                -- Loop through every ticket price
+                LOOP
+                    FETCH ticket_prices_cursor INTO current_ticket_price;
+                    
+                    -- Stop the loop when there are no more tickets
+                    EXIT WHEN ticket_prices_cursor%NOTFOUND;
+                    
+                    -- Add the current ticket price to the total revenue
+                    total_calculated_revenue := total_calculated_revenue + NVL(current_ticket_price, 0);
+                END LOOP;
+                
+                -- Close the cursor after we are done
+                CLOSE ticket_prices_cursor;
+                
+                -- Return the final calculated value
+                :ret := total_calculated_revenue;
             EXCEPTION
                 WHEN OTHERS THEN
+                    -- If any error happens, return 0
                     :ret := 0;
             END;
         `, {
-            startDate, endDate,
             ret: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         });
         res.json({ totalRevenue: result.outBinds.ret });
@@ -199,6 +214,8 @@ const getFrequentRoutes = async (req, res) => {
     await withConnection(req, res, async (conn) => {
         const result = await conn.execute(
             `BEGIN
+                -- Open a cursor (a set of rows) and link it to the output variable :cursor
+                -- This will send the data back to our NodeJS application
                 OPEN :cursor FOR
                     SELECT r.RouteID AS ROUTEID, (r.StartLocation || ' to ' || r.EndLocation) AS ROUTENAME, 
                            COUNT(DISTINCT t.TripID) AS TRIPCOUNT, r.DistanceKm AS DISTANCEKM, r.EstimatedDuration AS ESTIMATEDDURATION
@@ -206,8 +223,11 @@ const getFrequentRoutes = async (req, res) => {
                     LEFT JOIN Trips t ON r.RouteID = t.RouteID
                     GROUP BY r.RouteID, r.StartLocation, r.EndLocation, r.DistanceKm, r.EstimatedDuration
                     ORDER BY TRIPCOUNT DESC, r.RouteID ASC;
+                    
             EXCEPTION
-                WHEN OTHERS THEN RAISE;
+                WHEN OTHERS THEN 
+                    -- If any error occurs during the query, throw the error
+                    RAISE;
             END;`,
             {
                 cursor: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
@@ -225,13 +245,20 @@ const getPassengerHistory = async (req, res) => {
         const { passengerId } = req.params;
         const result = await conn.execute(
             `DECLARE
-                v_count NUMBER;
+                -- Human readable variable to count if the passenger exists
+                number_of_matching_passengers NUMBER;
              BEGIN
-                SELECT COUNT(*) INTO v_count FROM Passengers WHERE PassengerID = :passengerId;
-                IF v_count = 0 THEN
+                -- First, check if the passenger actually exists in the database
+                SELECT COUNT(*) INTO number_of_matching_passengers 
+                FROM Passengers 
+                WHERE PassengerID = :passengerId;
+                
+                -- If we found 0 passengers, throw an error message
+                IF number_of_matching_passengers = 0 THEN
                     RAISE_APPLICATION_ERROR(-20001, 'Passenger not found.');
                 END IF;
 
+                -- Open a cursor (a pointer to a set of rows) and send it back to NodeJS
                 OPEN :cursor FOR
                     SELECT t.TicketID, r.StartLocation, r.EndLocation, tr.DepartureDateTime, tr.ArrivalDateTime, t.FareAmount, t.TicketStatus
                     FROM Tickets t
@@ -239,10 +266,13 @@ const getPassengerHistory = async (req, res) => {
                     JOIN Routes r ON tr.RouteID = r.RouteID
                     WHERE t.PassengerID = :passengerId
                     ORDER BY tr.DepartureDateTime DESC;
+                    
              EXCEPTION
                 WHEN NO_DATA_FOUND THEN
+                    -- This happens if no data is found at all
                     RAISE_APPLICATION_ERROR(-20002, 'No data found during travel history retrieval.');
                 WHEN OTHERS THEN
+                    -- If any other error happens, re-throw it so we can see what went wrong
                     RAISE;
              END;`,
             {
