@@ -93,7 +93,8 @@ const searchReviews = async (req, res) => {
 // GET /api/announcements (Helper route for frontend dashboard)
 const getAnnouncements = async (req, res) => {
     try {
-        const announcements = await Announcement.find({ active: true }).sort({ createdAt: -1 });
+        const query = req.query.all === 'true' ? {} : { active: true };
+        const announcements = await Announcement.find(query).sort({ createdAt: -1 });
         res.json(announcements);
     } catch (err) {
         console.error(err);
@@ -141,6 +142,43 @@ const postAnnouncement = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to post announcement' });
+    }
+};
+
+// PUT /api/announcements/:id
+const updateAnnouncement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, type, message, active } = req.body;
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (type !== undefined) updateData.type = type;
+        if (message !== undefined) updateData.message = message;
+        if (active !== undefined) updateData.active = Boolean(active);
+
+        const updated = await Announcement.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updated) {
+            return res.status(404).json({ error: 'Announcement not found' });
+        }
+        res.json({ message: 'Announcement updated successfully', announcement: updated });
+    } catch (err) {
+        console.error('Failed to update announcement:', err);
+        res.status(500).json({ error: 'Failed to update announcement' });
+    }
+};
+
+// DELETE /api/announcements/:id
+const deleteAnnouncement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Announcement.findByIdAndDelete(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Announcement not found' });
+        }
+        res.json({ message: 'Announcement deleted successfully' });
+    } catch (err) {
+        console.error('Failed to delete announcement:', err);
+        res.status(500).json({ error: 'Failed to delete announcement' });
     }
 };
 
@@ -195,6 +233,8 @@ module.exports = {
     getTopRatedVehicles,
     searchReviews,
     getAnnouncements,
+    updateAnnouncement,
+    deleteAnnouncement,
     getVehicleDocuments,
     postVehicleDocument,
     postAnnouncement,
