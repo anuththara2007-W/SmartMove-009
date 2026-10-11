@@ -6,7 +6,7 @@ const DEFAULT_ROUTE_IMAGE = 'https://images.unsplash.com/photo-1544620347-c4fd4a
 
 async function fetchRoutes() {
     const grid = document.getElementById('routesGrid');
-    
+
     try {
         const [routesRes, imagesRes] = await Promise.all([
             fetch('/api/routes'),
@@ -17,8 +17,7 @@ async function fetchRoutes() {
             throw new Error(`HTTP error! status: ${routesRes.status}`);
         }
         
-        const routes = await routesRes.json();
-        const routeImages = imagesRes && imagesRes.ok ? await imagesRes.json() : [];
+        const routes = await response.json();
         
         if (!routes || routes.length === 0) {
             grid.innerHTML = '<p>No routes found in Oracle database.</p>';
@@ -36,40 +35,18 @@ async function fetchRoutes() {
 function renderRoutes(gridElement, routesList, routeImages = []) {
     gridElement.innerHTML = '';
     
-    // Find admin default route image (resourceId === 0 or caption containing 'default')
-    const adminDefaultImg = routeImages.find(img => 
-        (img.resourceType === 'route' || !img.resourceType) && 
-        (Number(img.resourceId) === 0 || (img.caption && img.caption.toLowerCase().includes('default')))
-    );
-    const defaultRouteUrl = adminDefaultImg?.imageUrl || DEFAULT_ROUTE_IMAGE;
-
     routesList.forEach(route => {
         const card = document.createElement('div');
         card.className = 'glass-panel route-card';
         card.style.padding = '2rem';
         card.style.overflow = 'hidden';
-        
+
         const routeName = route.STARTLOCATION ? `${route.STARTLOCATION} to ${route.ENDLOCATION}` : 'Unknown Route';
         const routeId = route.ROUTEID || route.routeId || 'N/A';
         const isPopular = route.ISPOPULAR === 'Y';
         const status = isPopular ? '★ Popular' : 'Active';
         const distance = route.DISTANCEKM ? `${route.DISTANCEKM} Km` : 'N/A';
-        const duration = route.ESTIMATEDDURATION ? `${route.ESTIMATEDDURATION} hrs` : '';
         
-        // Find matching image from admin panel or fallback to default
-        let imgUrl = defaultRouteUrl;
-        const matchedImg = routeImages.find(img => 
-            (img.resourceType === 'route' || !img.resourceType) &&
-            (Number(img.resourceId) === Number(routeId) || String(img.resourceId) === String(routeId) ||
-             Number(img.referenceId) === Number(routeId) || String(img.referenceId) === String(routeId))
-        );
-        if (matchedImg && matchedImg.imageUrl) {
-            imgUrl = matchedImg.imageUrl;
-        }
-        if (imgUrl && imgUrl.startsWith('data:image')) {
-            imgUrl = imgUrl.replace(/[\r\n\s]+/g, '');
-        }
-
         card.innerHTML = `
             <div style="height: 170px; margin: -2rem -2rem 1.5rem -2rem; overflow: hidden; position: relative;">
                 <img src="${imgUrl}" alt="${routeName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='${DEFAULT_ROUTE_IMAGE}'">
@@ -86,7 +63,7 @@ function renderRoutes(gridElement, routesList, routeImages = []) {
                 <a href="book.html?routeId=${routeId}" class="btn-primary" style="text-decoration: none; display: inline-block;">Book This Route</a>
             </div>
         `;
-        
+
         gridElement.appendChild(card);
     });
 }

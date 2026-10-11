@@ -37,14 +37,16 @@
         </div>
 
     </header>
+
     <main class="page-main">
 
         <div style="
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-        align-items: start;
-    ">
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+        ">
+
             <!-- Submit Booking -->
             <div class="gsap-fade-right">
 
@@ -78,6 +80,7 @@
                                 oninput="validateForm()">
 
                         </div>
+
                         <!-- Route Details -->
                         <div class="form-group">
 
@@ -90,6 +93,7 @@
                                 oninput="validateForm()">
 
                         </div>
+
                         <!-- Payment Method -->
                         <div class="form-group">
 
@@ -108,6 +112,7 @@
                 </div>
 
             </div>
+
             <!-- Right Column: Info -->
             <div class="gsap-fade-left">
 
@@ -116,18 +121,19 @@
                 </h2>
 
                 <div style="
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    ">
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1.5rem;
+                    margin-bottom: 3rem;
+                ">
+
                     <!-- Flexible Payment -->
                     <div class="glass-panel" style="padding: 2rem;">
 
                         <div style="
-                margin-bottom: 0.5rem;
-                color: var(--primary-accent);
-            ">
+                            margin-bottom: 0.5rem;
+                            color: var(--primary-accent);
+                        ">
 
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -143,27 +149,28 @@
                         </div>
 
                         <h3 style="
-                font-size: 1.2rem;
-                margin-bottom: 0.5rem;
-            ">
+                            font-size: 1.2rem;
+                            margin-bottom: 0.5rem;
+                        ">
                             Flexible
                         </h3>
 
                         <p style="
-                color: var(--text-secondary);
-                font-size: 0.95rem;
-            ">
+                            color: var(--text-secondary);
+                            font-size: 0.95rem;
+                        ">
                             Pay securely online or choose to pay cash.
                         </p>
 
                     </div>
+
                     <!-- Real-Time Updates -->
                     <div class="glass-panel" style="padding: 2rem;">
 
                         <div style="
-                margin-bottom: 0.5rem;
-                color: var(--primary-accent);
-            ">
+                            margin-bottom: 0.5rem;
+                            color: var(--primary-accent);
+                        ">
 
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -179,75 +186,76 @@
                         </div>
 
                         <h3 style="
-                font-size: 1.2rem;
-                margin-bottom: 0.5rem;
-            ">
+                            font-size: 1.2rem;
+                            margin-bottom: 0.5rem;
+                        ">
                             Real-time
                         </h3>
 
                         <p style="
-                color: var(--text-secondary);
-                font-size: 0.95rem;
-            ">
+                            color: var(--text-secondary);
+                            font-size: 0.95rem;
+                        ">
                             Instant updates powered by MongoDB.
                         </p>
 
                     </div>
 
                 </div>
+
                 <!-- User Side Bookings Table -->
                 <div class="glass-panel gsap-fade-up" style="padding: 2rem;">
 
                     <h2 style="
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-    ">
+                        font-size: 1.5rem;
+                        margin-bottom: 1.5rem;
+                    ">
                         Your Recent Bookings
                     </h2>
 
                     <div style="overflow-x: auto;">
 
                         <table style="
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        ">
+                            width: 100%;
+                            border-collapse: collapse;
+                            text-align: left;
+                        ">
 
                             <thead>
 
                                 <tr style="
-                    border-bottom: 2px solid var(--border-color);
-                ">
+                                    border-bottom: 2px solid var(--border-color);
+                                ">
 
                                     <th style="
-                        padding: 1rem;
-                        font-size: 0.9rem;
-                        color: var(--text-secondary);
-                    ">
+                                        padding: 1rem;
+                                        font-size: 0.9rem;
+                                        color: var(--text-secondary);
+                                    ">
                                         Ticket ID
                                     </th>
 
                                     <th style="
-                        padding: 1rem;
-                        font-size: 0.9rem;
-                        color: var(--text-secondary);
-                    ">
+                                        padding: 1rem;
+                                        font-size: 0.9rem;
+                                        color: var(--text-secondary);
+                                    ">
                                         Route
                                     </th>
 
                                     <th style="
-                        padding: 1rem;
-                        font-size: 0.9rem;
-                        color: var(--text-secondary);
-                    ">
+                                        padding: 1rem;
+                                        font-size: 0.9rem;
+                                        color: var(--text-secondary);
+                                    ">
                                         Payment
                                     </th>
 
                                     <th style="
-                        padding: 1rem;
-                        font-size: 0.9rem;
-                        color: var(--text-secondary);
-                    ">
+                                        padding: 1rem;
+                                        font-size: 0.9rem;
+                                        color: var(--text-secondary);
+                                    ">
                                         Status
                                     </th>
 
@@ -260,11 +268,11 @@
                                 <tr>
 
                                     <td colspan="4" style="
-                            padding: 1.5rem;
-                            text-align: center;
-                            color: var(--text-secondary);
-                            font-size: 0.9rem;
-                        ">
+                                        padding: 1.5rem;
+                                        text-align: center;
+                                        color: var(--text-secondary);
+                                        font-size: 0.9rem;
+                                    ">
                                         No bookings made yet in this session.
                                     </td>
 
@@ -277,32 +285,33 @@
                     </div>
 
                 </div>
+
             </div>
 
         </div>
-        <!-- Full Width Vehicle Selection & Submit -->
 
+        <!-- Full Width Vehicle Selection & Submit -->
         <div class="gsap-fade-up" style="margin-top: 4rem;">
 
             <h2 style="
-        font-size: 1.8rem;
-        margin-bottom: 1.5rem;
-    ">
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
+            ">
                 Select Your Vehicle
             </h2>
 
             <div id="vehicleSelectionGrid" style="
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        ">
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            ">
 
                 <div style="
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            grid-column: span 4;
-        ">
+                    color: var(--text-secondary);
+                    font-size: 0.9rem;
+                    grid-column: span 4;
+                ">
                     Loading available vehicles...
                 </div>
 
@@ -311,25 +320,27 @@
             <input type="hidden" id="selectedVehicleId">
 
             <p id="vehicleErrorMsg" style="
-            color: var(--error-color);
-            font-size: 0.85rem;
-            display: none;
-            margin-bottom: 1rem;
-        ">
+                color: var(--error-color);
+                font-size: 0.85rem;
+                display: none;
+                margin-bottom: 1rem;
+            ">
                 Please select a vehicle to continue.
             </p>
+
             <button type="submit" form="bookingForm" id="submitBtn" class="btn-primary" style="
-            width: 100%;
-            max-width: 400px;
-            padding: 1rem;
-            font-size: 1.1rem;
-            display: block;
-            margin: 0 auto;
-        " disabled>
+                    width: 100%;
+                    max-width: 400px;
+                    padding: 1rem;
+                    font-size: 1.1rem;
+                    display: block;
+                    margin: 0 auto;
+                " disabled>
                 Confirm Booking
             </button>
 
         </div>
+
         <footer>
 
             <p>
@@ -338,8 +349,8 @@
             </p>
 
         </footer>
-        <!-- JavaScript -->
 
+        <!-- JavaScript -->
         <script src="js/utils.js"></script>
         <script src="js/book.js"></script>
 
