@@ -30,24 +30,72 @@ async function fetchAnnouncements() {
 
         announcements.forEach((ann) => {
             const card = document.createElement('div');
-            card.className = 'glass-panel announcement-card';
-            card.style.padding = '2rem';
-            
-            let colorIndicator = '#3b82f6';
-            if (ann.type === 'warning') colorIndicator = '#f59e0b';
-            else if (ann.type === 'alert') colorIndicator = '#ef4444';
+            card.className = 'announcement-card-premium';
+            card.style.cssText = `
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-radius: 20px;
+                padding: 1.75rem;
+                border: 1px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                position: relative;
+                overflow: hidden;
+            `;
+
+            let badgeHtml = '';
+            let accentBorderColor = '#3b82f6';
+            if (ann.type === 'warning') {
+                accentBorderColor = '#f59e0b';
+                badgeHtml = `<span style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Caution
+                </span>`;
+            } else if (ann.type === 'alert') {
+                accentBorderColor = '#ef4444';
+                badgeHtml = `<span style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    Urgent Alert
+                </span>`;
+            } else {
+                accentBorderColor = '#3b82f6';
+                badgeHtml = `<span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Notice
+                </span>`;
+            }
+
+            const dateText = ann.createdAt ? SmartMoveUtils.formatDate(ann.createdAt) : 'Recently';
 
             card.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${colorIndicator};"></div>
-                    <h3 style="font-size: 1.1rem; font-weight: 600;">${ann.title}</h3>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: ${accentBorderColor};"></div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        ${badgeHtml}
+                        <span style="font-size: 0.78rem; color: #64748b; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            ${dateText}
+                        </span>
+                    </div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.6rem; line-height: 1.35;">${ann.title}</h3>
+                    <p style="font-size: 0.92rem; color: #475569; line-height: 1.6; margin: 0;">${ann.message}</p>
                 </div>
-                <p>${ann.message}</p>
-                <small style="color: var(--text-secondary); display: block; margin-top: 1rem;">
-                    ${SmartMoveUtils.formatDate(ann.createdAt)}
-                </small>
             `;
             
+            // Hover micro-animations
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-6px)';
+                card.style.boxShadow = '0 20px 35px -5px rgba(0, 0, 0, 0.12)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.05)';
+            });
+
             grid.appendChild(card);
         });
 
