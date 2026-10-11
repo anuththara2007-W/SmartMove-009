@@ -16,9 +16,9 @@ async function fetchRoutes() {
         if (!routesRes.ok) {
             throw new Error(`HTTP error! status: ${routesRes.status}`);
         }
-        
+
         const routes = await response.json();
-        
+
         if (!routes || routes.length === 0) {
             grid.innerHTML = '<p>No routes found in Oracle database.</p>';
             return;
@@ -34,7 +34,7 @@ async function fetchRoutes() {
 
 function renderRoutes(gridElement, routesList, routeImages = []) {
     gridElement.innerHTML = '';
-    
+
     routesList.forEach(route => {
         const card = document.createElement('div');
         card.className = 'glass-panel route-card';
@@ -46,7 +46,7 @@ function renderRoutes(gridElement, routesList, routeImages = []) {
         const isPopular = route.ISPOPULAR === 'Y';
         const status = isPopular ? '★ Popular' : 'Active';
         const distance = route.DISTANCEKM ? `${route.DISTANCEKM} Km` : 'N/A';
-        
+
         card.innerHTML = `
             <div style="height: 170px; margin: -2rem -2rem 1.5rem -2rem; overflow: hidden; position: relative;">
                 <img src="${imgUrl}" alt="${routeName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='${DEFAULT_ROUTE_IMAGE}'">
