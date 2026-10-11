@@ -44,6 +44,23 @@ async function initializeDatabases() {
         });
         console.log('Successfully connected to Oracle Database (xe)!');
 
+        // Ensure Routes table has IsPopular column
+        try {
+            const conn = await oracledb.getConnection();
+            const colCheck = await conn.execute(
+                `SELECT column_name FROM user_tab_columns WHERE table_name = 'ROUTES' AND column_name = 'ISPOPULAR'`
+            );
+            if (!colCheck.rows || colCheck.rows.length === 0) {
+                await conn.execute(`ALTER TABLE Routes ADD (IsPopular VARCHAR2(1) DEFAULT 'Y')`);
+                await conn.execute(`UPDATE Routes SET IsPopular = 'Y' WHERE IsPopular IS NULL`);
+                await conn.commit();
+                console.log('Ensured IsPopular column exists in Routes table.');
+            }
+            await conn.close();
+        } catch (colErr) {
+            console.warn('Warning checking Routes columns:', colErr.message);
+        }
+
         // 2. Connect to MongoDB
         await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/TransportManagementDB');
         console.log('Successfully connected to MongoDB!');

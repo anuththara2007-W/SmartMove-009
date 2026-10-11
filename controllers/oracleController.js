@@ -37,8 +37,15 @@ const fetchAll = (query, errorMessage) => async (req, res) => {
 
 const deleteRecord = (tableName, idCol, errorMsg) => async (req, res) => {
     await withConnection(req, res, async (connection) => {
-        await executeQuery(connection, `DELETE FROM ${tableName} WHERE ${idCol} = :id`, { id: req.params.id }, true);
-        res.json({ message: 'Record deleted successfully' });
+        try {
+            await executeQuery(connection, `DELETE FROM ${tableName} WHERE ${idCol} = :id`, { id: req.params.id }, true);
+            res.json({ message: 'Record deleted successfully' });
+        } catch (err) {
+            if (err.message && err.message.includes('ORA-02292')) {
+                return res.status(400).json({ error: `Cannot delete record because it is referenced by other system records.` });
+            }
+            throw err;
+        }
     }, errorMsg);
 };
 
@@ -51,8 +58,17 @@ const getRoutes = async (req, res) => {
             query += ` WHERE NVL(IsPopular, 'N') = 'Y'`;
         }
         query += ` ORDER BY RouteID ASC`;
-        const result = await executeQuery(connection, query);
-        res.json(result.rows);
+        try {
+            const result = await executeQuery(connection, query);
+            res.json(result.rows);
+        } catch (err) {
+            if (isPopularOnly && (err.message && err.message.includes('ORA-00904'))) {
+                console.warn('IsPopular column missing in Routes, falling back to all routes');
+                const fallbackResult = await executeQuery(connection, `SELECT * FROM Routes ORDER BY RouteID ASC`);
+                return res.json(fallbackResult.rows);
+            }
+            throw err;
+        }
     }, 'Failed to fetch routes');
 };
 const deleteRoute = deleteRecord('Routes', 'RouteID', 'Failed to delete route');
@@ -400,7 +416,28 @@ const getTrips = fetchAll(`
     JOIN Drivers d ON t.DriverID = d.DriverID
     ORDER BY t.DepartureDateTime DESC
 `, 'Failed to fetch trips');
-const deleteTrip = deleteRecord('Trips', 'TripID', 'Failed to delete trip');
+
+const deleteTrip = async (req, res) => {
+    await withConnection(req, res, async (conn) => {
+        const { id } = req.params;
+        // 1. Delete associated payments for tickets on this trip
+        await executeQuery(conn, `
+            DELETE FROM Payments WHERE TicketID IN (SELECT TicketID FROM Tickets WHERE TripID = :id)
+        `, { id });
+        
+        // 2. Delete tickets on this trip
+        await executeQuery(conn, `
+            DELETE FROM Tickets WHERE TripID = :id
+        `, { id });
+        
+        // 3. Delete the trip itself
+        await executeQuery(conn, `
+            DELETE FROM Trips WHERE TripID = :id
+        `, { id }, true);
+        
+        res.json({ message: 'Trip deleted successfully' });
+    }, 'Failed to delete trip');
+};
 
 const checkTripConflict = async (conn, driverID, vehicleID, start, end, excludeId = null) => {
     const q = `
@@ -498,11 +535,31 @@ const deleteVehicle = async (req, res) => {
         const { id } = req.params;
         
         try {
-            await conn.execute(`DELETE FROM Vehicles WHERE VehicleID = :id`, { id }, { autoCommit: true });
+            // 1. Delete associated maintenance records if any
+            await executeQuery(conn, `DELETE FROM Maintenance WHERE VehicleID = :id`, { id });
+
+            // 2. Delete payments for tickets on any trips of this vehicle
+            await executeQuery(conn, `
+                DELETE FROM Payments WHERE TicketID IN (
+                    SELECT TicketID FROM Tickets WHERE TripID IN (SELECT TripID FROM Trips WHERE VehicleID = :id)
+                )
+            `, { id });
+
+            // 3. Delete tickets for trips of this vehicle
+            await executeQuery(conn, `
+                DELETE FROM Tickets WHERE TripID IN (SELECT TripID FROM Trips WHERE VehicleID = :id)
+            `, { id });
+
+            // 4. Delete trips for this vehicle
+            await executeQuery(conn, `DELETE FROM Trips WHERE VehicleID = :id`, { id });
+
+            // 5. Delete the vehicle itself
+            await executeQuery(conn, `DELETE FROM Vehicles WHERE VehicleID = :id`, { id }, true);
             res.json({ message: 'Vehicle deleted successfully' });
         } catch (error) {
-            if (error.message.includes('ORA-02292')) {
-                return res.status(400).json({ error: 'Cannot delete vehicle because it is currently assigned to one or more trips. Please delete the trips first.' });
+            console.error('Error deleting vehicle:', error);
+            if (error.message && error.message.includes('ORA-02292')) {
+                return res.status(400).json({ error: 'Cannot delete vehicle because it is currently assigned to one or more records.' });
             }
             throw error;
         }
