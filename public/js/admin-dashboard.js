@@ -7,9 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const calcBtn = document.getElementById('calcRevenueBtn');
     calcBtn.addEventListener('click', handleCalculateRevenue);
-    
-    const searchBtn = document.getElementById('searchBtn');
-    if (searchBtn) searchBtn.addEventListener('click', handleSearchComplaints);
+
 });
 
 async function handleCalculateRevenue() {
@@ -152,14 +150,14 @@ function renderFrequentRoutesTable(tbody, routes) {
     routes.forEach((route) => {
         const tr = document.createElement('tr');
         
-        const id = route.ROUTEID || route.routeId || route.RouteID;
-        const name = route.ROUTENAME || route.routeName || route.RouteName;
-        const count = route.TRIPCOUNT || route.tripCount || route.TripCount || 0;
+        const id = Array.isArray(route) ? route[0] : (route.ROUTEID || route.routeId || route.RouteID || 'N/A');
+        const name = Array.isArray(route) ? route[1] : (route.ROUTENAME || route.routeName || route.RouteName || 'Route');
+        const count = Array.isArray(route) ? (route[2] ?? 0) : (route.TRIPCOUNT ?? route.tripCount ?? route.TripCount ?? 0);
 
         tr.innerHTML = `
             <td><strong>#${id}</strong></td>
             <td>${name}</td>
-            <td>${count}</td>
+            <td style="text-align: right; font-weight: 600;">${count}</td>
         `;
         
         tbody.appendChild(tr);
@@ -195,34 +193,4 @@ async function fetchTopDrivers() {
     }
 }
 
-async function handleSearchComplaints() {
-    const query = document.getElementById('searchInput').value;
-    const tbody = document.getElementById('complaintsTableBody');
-    if (!query) return;
-    
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Searching...</td></tr>';
-    
-    try {
-        const res = await fetch(`/api/reviews/search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error();
-        const results = await res.json();
-        
-        if (results.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">No reviews matched "${query}".</td></tr>`;
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        results.forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>Route #${r.routeId || 'N/A'}</td>
-                <td>${r.feedbackText || 'N/A'}</td>
-                <td style="color: #fbbf24;">${r.rating} ★</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: red;">MongoDB search failed.</td></tr>';
-    }
-}
+

@@ -291,11 +291,18 @@ function renderSelectorList(filter = '') {
         items = allVehicles.filter(v => v.STATUS === 'Active').filter(v => 
             (v.REGNUMBER || '').toLowerCase().includes(filter) || 
             (v.VEHICLETYPE || '').toLowerCase().includes(filter)
-        ).map(v => ({
-            id: v.VEHICLEID,
-            display: `${v.REGNUMBER} (${v.VEHICLETYPE})`,
-            sub: `Capacity: ${v.CAPACITY} | Status: ${v.STATUS}`
-        }));
+        ).map(v => {
+            const activeCount = v.ACTIVETRIPSCOUNT !== undefined ? v.ACTIVETRIPSCOUNT : (v.activeTripsCount || 0);
+            const isAvail = activeCount === 0;
+            const statusLabel = isAvail ? '🟢 Available' : (v.CURRENTTRIPSTATUS === 'In Progress' ? `🟠 On Trip (#${v.CURRENTTRIPID})` : `🔵 Scheduled (#${v.CURRENTTRIPID})`);
+            const completedNote = (v.COMPLETEDTRIPSCOUNT > 0) ? ` &bull; ${v.COMPLETEDTRIPSCOUNT} completed trip(s)` : '';
+            return {
+                id: v.VEHICLEID,
+                display: `${v.REGNUMBER} (${v.VEHICLETYPE})`,
+                badge: statusLabel,
+                sub: `Capacity: ${v.CAPACITY} | ${isAvail ? 'Ready to book' : 'Assigned to active trip'}${completedNote}`
+            };
+        });
     } else if (currentSelectorType === 'driver') {
         items = allDrivers.filter(d => d.STATUS === 'Active').filter(d => 
             (d.FIRSTNAME || '').toLowerCase().includes(filter) || 
@@ -313,9 +320,12 @@ function renderSelectorList(filter = '') {
     }
 
     list.innerHTML = items.map(item => `
-        <div class="selector-item" onclick="selectItem('${item.id}', '${item.display.replace(/'/g, "\\'")}')">
-            <div style="font-weight: 600;">${SmartMoveUtils.escapeHtml(item.display)}</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">${SmartMoveUtils.escapeHtml(item.sub)}</div>
+        <div class="selector-item" onclick="selectItem('${item.id}', '${item.display.replace(/'/g, "\\'")}')" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem;">
+            <div>
+                <div style="font-weight: 600; color: #0f172a;">${SmartMoveUtils.escapeHtml(item.display)}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">${item.sub}</div>
+            </div>
+            ${item.badge ? `<div style="font-size: 0.8rem; font-weight: 700; white-space: nowrap; margin-left: 0.75rem;">${item.badge}</div>` : ''}
         </div>
     `).join('');
 }

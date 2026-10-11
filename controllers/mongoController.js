@@ -6,13 +6,28 @@ const ResourceImage = require('../models/ResourceImage');
 // POST /api/reviews
 const submitReview = async (req, res) => {
     try {
-        const { passengerId, routeId, driverId, rating, feedbackText } = req.body;
-        const newReview = new Review({ passengerId, routeId, driverId, rating, feedbackText });
+        const pId = req.body.passengerID ?? req.body.passengerId;
+        const rId = req.body.routeID ?? req.body.routeId;
+        const dId = req.body.driverID ?? req.body.driverId ?? 999;
+        const rating = Number(req.body.rating);
+        const feedback = req.body.feedback ?? req.body.feedbackText;
+
+        if (pId === undefined || rId === undefined || !feedback || isNaN(rating)) {
+            return res.status(400).json({ error: 'Missing required review fields: passenger, route, rating, and feedback' });
+        }
+
+        const newReview = new Review({
+            passengerID: Number(pId),
+            routeID: Number(rId),
+            driverID: Number(dId),
+            rating: Number(rating),
+            feedback: String(feedback).trim()
+        });
         await newReview.save();
         res.status(201).json(newReview);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to submit review' });
+        console.error('Failed to submit review to MongoDB:', err);
+        res.status(500).json({ error: err.message || 'Failed to submit review' });
     }
 };
 
@@ -30,8 +45,8 @@ const getAllReviews = async (req, res) => {
 // GET /api/reviews/route/:id
 const getReviewsByRoute = async (req, res) => {
     try {
-        const routeId = req.params.id;
-        const reviews = await Review.find({ routeId }).sort({ createdAt: -1 });
+        const routeId = Number(req.params.id);
+        const reviews = await Review.find({ $or: [{ routeID: routeId }, { routeId: routeId }] }).sort({ createdAt: -1 });
         res.json(reviews);
     } catch (err) {
         console.error(err);
@@ -42,11 +57,10 @@ const getReviewsByRoute = async (req, res) => {
 // GET /api/vehicles/top-rated
 const getTopRatedVehicles = async (req, res) => {
     try {
-        // Aggregate reviews to find highest rated drivers (assuming driver is mapped to vehicle on frontend or another API)
         const topRated = await Review.aggregate([
             {
                 $group: {
-                    _id: '$driverId',
+                    _id: { $ifNull: ['$driverID', '$driverId'] },
                     averageRating: { $avg: '$rating' },
                     reviewCount: { $sum: 1 }
                 }
@@ -137,7 +151,7 @@ const getImages = async (req, res) => {
         const { type, id } = req.query;
         const query = {};
         if (type) query.resourceType = type;
-        if (id) query.resourceId = parseInt(id);
+        if (id !== undefined && id !== '') query.resourceId = parseInt(id, 10);
         const images = await ResourceImage.find(query).sort({ createdAt: -1 });
         res.json(images);
     } catch (err) {
@@ -150,10 +164,10 @@ const getImages = async (req, res) => {
 const addImage = async (req, res) => {
     try {
         const { resourceType, resourceId, imageUrl, caption } = req.body;
-        if (!resourceType || !resourceId || !imageUrl) {
+        if (!resourceType || resourceId === undefined || resourceId === null || resourceId === '' || !imageUrl) {
             return res.status(400).json({ error: 'resourceType, resourceId and imageUrl are required' });
         }
-        const img = new ResourceImage({ resourceType, resourceId: parseInt(resourceId), imageUrl, caption });
+        const img = new ResourceImage({ resourceType, resourceId: parseInt(resourceId, 10), imageUrl, caption: caption || '' });
         await img.save();
         res.status(201).json(img);
     } catch (err) {

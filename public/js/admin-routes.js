@@ -19,31 +19,60 @@ let currentRouteIdToDelete = null;
 
 async function fetchRoutes() {
     const tbody = document.getElementById('routesBody');
-    tbody.innerHTML = `<tr><td colspan="6"><div class="skeleton" style="height: 40px; width: 100%;"></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="skeleton" style="height: 40px; width: 100%;"></div></td></tr>`;
     
     try {
-        const data = await SmartMoveUtils.apiRequest('/api/routes');
-        renderRoutes(data);
+        const [routes, images] = await Promise.all([
+            SmartMoveUtils.apiRequest('/api/routes'),
+            fetch('/api/images?type=route').then(r => r.ok ? r.json() : []).catch(() => [])
+        ]);
+        renderRoutes(routes, images);
     } catch (err) {
         SmartMoveUtils.renderErrorState(document.getElementById('tableContainer'), err.message);
     }
 }
 
-function renderRoutes(routes) {
+function renderRoutes(routes, images = []) {
     const tbody = document.getElementById('routesBody');
     if (!routes || routes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-secondary); padding: 2rem;">No routes found.<br><br><button class="btn-primary" onclick="openFormModal()">Add Route</button></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-secondary); padding: 2rem;">No routes found.<br><br><button class="btn-primary" onclick="openFormModal()">Add Route</button></td></tr>`;
         return;
     }
+
+    const fallbackDefault = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80';
+    const adminDefaultImg = images.find(img => 
+        (img.resourceType === 'route' || !img.resourceType) && 
+        (Number(img.resourceId) === 0 || (img.caption && img.caption.toLowerCase().includes('default')))
+    );
+    const defaultRouteUrl = adminDefaultImg?.imageUrl || fallbackDefault;
 
     tbody.innerHTML = routes.map(r => {
         const isPop = r.ISPOPULAR === 'Y';
         const typeBadge = isPop 
             ? `<span style="background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">★ Popular</span>`
             : `<span style="background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">Custom Journey</span>`;
+        
+        // Find matching image or default
+        const matched = images.find(img => 
+            (img.resourceType === 'route' || !img.resourceType) && 
+            (Number(img.resourceId) === Number(r.ROUTEID) || String(img.resourceId) === String(r.ROUTEID))
+        );
+        const imgUrl = matched?.imageUrl || defaultRouteUrl;
+        const isCustomImg = !!matched?.imageUrl;
+
+        const imgBadge = isCustomImg
+            ? `<span title="Custom image configured in Media Management" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; position: absolute; top: -3px; right: -3px; border: 2px solid white;"></span>`
+            : `<span title="Using default route image" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; position: absolute; top: -3px; right: -3px; border: 2px solid white;"></span>`;
+
         return `
         <tr>
-            <td>${r.ROUTEID}</td>
+            <td><strong>#${r.ROUTEID}</strong></td>
+            <td>
+                <div style="position: relative; display: inline-block; width: 44px; height: 32px;">
+                    <img src="${imgUrl}" alt="Route #${r.ROUTEID}" style="width: 44px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); display: block;" onerror="this.src='${fallbackDefault}'">
+                    ${imgBadge}
+                </div>
+            </td>
             <td>${SmartMoveUtils.escapeHtml(r.STARTLOCATION)}</td>
             <td>${SmartMoveUtils.escapeHtml(r.ENDLOCATION)}</td>
             <td>${r.DISTANCEKM}</td>

@@ -80,9 +80,9 @@ function renderFrequentRoutesTable(tbody, routes) {
     routes.forEach(route => {
         const tr = document.createElement('tr');
         
-        const id = route.ROUTEID || route.routeId || 'N/A';
-        const name = route.ROUTENAME || route.routeName || 'Unknown';
-        const count = route.TRIPCOUNT || route.tripCount || 0;
+        const id = Array.isArray(route) ? route[0] : (route.ROUTEID || route.routeId || route.RouteID || 'N/A');
+        const name = Array.isArray(route) ? route[1] : (route.ROUTENAME || route.routeName || route.RouteName || 'Unknown');
+        const count = Array.isArray(route) ? (route[2] ?? 0) : (route.TRIPCOUNT ?? route.tripCount ?? route.TripCount ?? 0);
 
         tr.innerHTML = `
             <td><strong>#${id}</strong></td>

@@ -12,7 +12,8 @@ const reviewSchema = new mongoose.Schema({
     },
     driverID: {
         type: Number,
-        required: true
+        required: false,
+        default: 999
     },
     rating: {
         type: Number,
@@ -24,7 +25,21 @@ const reviewSchema = new mongoose.Schema({
         type: String,
         required: true
     }
-}, { timestamps: true });
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
+
+// Virtual getters for frontend compatibility
+reviewSchema.virtual('passengerId').get(function() {
+    return this.passengerID;
+});
+reviewSchema.virtual('routeId').get(function() {
+    return this.routeID;
+});
+reviewSchema.virtual('driverId').get(function() {
+    return this.driverID;
+});
+reviewSchema.virtual('feedbackText').get(function() {
+    return this.feedback;
+});
 
 // Text index for search functionality
 reviewSchema.index({ feedback: 'text' });
