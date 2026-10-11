@@ -28,7 +28,9 @@ async function fetchAnnouncements() {
 
         grid.innerHTML = '';
 
-        announcements.forEach((ann) => {
+        // Only display top 6 announcements on the homepage
+        const displayAnnouncements = announcements.slice(0, 6);
+        displayAnnouncements.forEach((ann) => {
             const card = document.createElement('div');
             card.className = 'announcement-card-premium';
             card.style.cssText = `
