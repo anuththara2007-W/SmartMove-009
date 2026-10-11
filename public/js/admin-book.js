@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Real-time Form Validation
     const form = document.getElementById('bookingForm');
     const submitBtn = document.getElementById('submitBtn');
-    
+
     function checkValidity() {
         const pId = document.getElementById('passengerId').value;
         const rId = document.getElementById('routeId').value;
         const pMeth = document.getElementById('paymentMethod').value;
-        
+
         if (pId && rId && pMeth) {
             submitBtn.disabled = false;
         } else {
@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
     observer.observe(document.getElementById('routeId'), { attributes: true });
 
     form.addEventListener('submit', handleBookingSubmit);
-    
+
     // Clear errors on input
     const inputs = form.querySelectorAll('.check-valid');
     inputs.forEach(input => {
-        input.addEventListener('input', function() {
+        input.addEventListener('input', function () {
             this.classList.remove('invalid');
             const errorElement = document.getElementById(`error-${this.id}`);
             if (errorElement) {
@@ -50,7 +50,7 @@ async function setupPassengerModal() {
         const response = await fetch('/api/passengers');
         if (!response.ok) throw new Error('API Error');
         const passengers = await response.json();
-        
+
         if (!passengers || passengers.length === 0) {
             SmartMoveUtils.renderEmptyState(body, 'No Passengers', 'No passengers currently available.');
             return;
@@ -69,7 +69,7 @@ async function setupRouteModal() {
         const response = await fetch('/api/routes');
         if (!response.ok) throw new Error('API Error');
         const routes = await response.json();
-        
+
         if (!routes || routes.length === 0) {
             SmartMoveUtils.renderEmptyState(body, 'No Routes', 'No routes currently available.');
             return;
@@ -86,7 +86,7 @@ function renderModalTable(container, data, headers, keys, clickHandler) {
     let html = `<table class="selection-table"><thead><tr>`;
     headers.forEach(h => html += `<th>${h}</th>`);
     html += `</tr></thead><tbody>`;
-    
+
     data.forEach(row => {
         // Convert row to JSON string to pass it safely to onclick
         const rowData = encodeURIComponent(JSON.stringify(row));
@@ -97,12 +97,12 @@ function renderModalTable(container, data, headers, keys, clickHandler) {
         html += `</tr>`;
     });
     html += `</tbody></table>`;
-    
+
     container.innerHTML = html;
 
     // Attach listeners
     container.querySelectorAll('tr[data-row]').forEach(tr => {
-        tr.addEventListener('click', function() {
+        tr.addEventListener('click', function () {
             const rowData = JSON.parse(decodeURIComponent(this.getAttribute('data-row')));
             clickHandler(rowData);
         });
@@ -129,17 +129,17 @@ function selectRoute(data) {
 
 async function handleBookingSubmit(event) {
     event.preventDefault();
-    
+
     const passengerId = document.getElementById('passengerId').value;
     const routeId = document.getElementById('routeId').value;
     const paymentMethod = document.getElementById('paymentMethod').value;
-    
+
     const submitBtn = document.getElementById('submitBtn');
 
     try {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Processing...';
-        
+
         const response = await fetch('/api/tickets', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -154,12 +154,12 @@ async function handleBookingSubmit(event) {
         if (!response.ok) throw new Error('Booking failed.');
 
         SmartMoveUtils.showToast('Ticket successfully booked via Oracle DB!', 'success');
-        
+
         document.getElementById('bookingForm').reset();
         // Manually reset readonly displays
         document.getElementById('passengerDisplay').value = '';
         document.getElementById('routeDisplay').value = '';
-        
+
     } catch (error) {
         console.error('Booking Error:', error);
         SmartMoveUtils.showToast(error.message || 'An error occurred during booking.', 'error');
@@ -169,4 +169,4 @@ async function handleBookingSubmit(event) {
     }
 }
 
-// --- SEAT SELECTOR REMOVED ---
+
