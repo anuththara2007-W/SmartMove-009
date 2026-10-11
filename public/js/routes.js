@@ -8,7 +8,7 @@ async function fetchRoutes() {
     const grid = document.getElementById('routesGrid');
     
     try {
-        const response = await fetch('/api/routes');
+        const response = await fetch('/api/routes?popular=true');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

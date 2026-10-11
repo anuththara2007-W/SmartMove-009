@@ -145,15 +145,44 @@ async function handleBookingSubmit(e) {
         const passData = await passRes.json();
         const passengerID = passData.passengerId;
 
-        // 2. Create Route
-        const routeRes = await fetch('/api/routes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ startLocation, endLocation, distanceKm: 10, estimatedDuration: 30 })
-        });
-        if (!routeRes.ok) throw new Error('Failed to create route');
-        const routeData = await routeRes.json();
-        const routeID = routeData.routeId;
+        // 2. Determine Route (reuse existing official route or create custom journey route)
+        const urlParams = new URLSearchParams(window.location.search);
+        let routeID = urlParams.get('routeId');
+
+        if (!routeID) {
+            try {
+                const existingRes = await fetch('/api/routes');
+                if (existingRes.ok) {
+                    const existingList = await existingRes.json();
+                    const matched = existingList.find(r => 
+                        (r.STARTLOCATION || '').trim().toLowerCase() === startLocation.toLowerCase() &&
+                        (r.ENDLOCATION || '').trim().toLowerCase() === endLocation.toLowerCase()
+                    );
+                    if (matched) {
+                        routeID = matched.ROUTEID || matched.routeId;
+                    }
+                }
+            } catch (err) {
+                console.error('Route matching check failed:', err);
+            }
+        }
+
+        if (!routeID) {
+            const routeRes = await fetch('/api/routes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    startLocation, 
+                    endLocation, 
+                    distanceKm: 10, 
+                    estimatedDuration: 30,
+                    isPopular: 'N' // Custom journey - not featured on homepage Popular Routes
+                })
+            });
+            if (!routeRes.ok) throw new Error('Failed to create route');
+            const routeData = await routeRes.json();
+            routeID = routeData.routeId;
+        }
 
         // 3. Book Ticket
         const ticketRes = await fetch('/api/tickets', {

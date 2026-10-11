@@ -106,11 +106,12 @@
                         <th>End Location</th>
                         <th>Distance (Km)</th>
                         <th>Est. Duration (Hrs)</th>
+                        <th>Type</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="routesBody">
-                    <tr><td colspan="6">Loading...</td></tr>
+                    <tr><td colspan="7">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -134,7 +135,7 @@
                         <label class="form-label">End Location</label>
                         <input type="text" id="endLocation" class="form-input" required>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                         <div>
                             <label class="form-label">Distance (Km)</label>
                             <input type="number" step="0.1" id="distanceKm" class="form-input" required>
@@ -143,6 +144,12 @@
                             <label class="form-label">Est. Duration (Hrs)</label>
                             <input type="number" step="0.1" id="estimatedDuration" class="form-input" required>
                         </div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.95rem; font-weight: 600;">
+                            <input type="checkbox" id="isPopular" checked style="width: 18px; height: 18px; accent-color: var(--primary-accent); cursor: pointer;">
+                            <span>Feature in Popular Routes (Homepage)</span>
+                        </label>
                     </div>
                     <button type="submit" class="btn-primary" id="submitBtn" style="width: 100%;">Save Route</button>
                 </form>
